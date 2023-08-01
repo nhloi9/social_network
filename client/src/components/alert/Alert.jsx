@@ -21,7 +21,7 @@ const Alert = () => {
 	}, [alert, distpatch]);
 
 	return (
-		<div>
+		<div className="fixed top-0 w-full z-30">
 			{alert.loading && <Loader setLoadingSuccess={setLoadingSuccess} />}
 			{loadingSuccess && (
 				<LinearProgress
@@ -61,7 +61,7 @@ const Loader = ({setLoadingSuccess}) => {
 		};
 	}, [setLoadingSuccess]);
 	return (
-		<div className="fixed top-0 right-0  z-10 left-0 bottom-0  bg-[#00000019]">
+		<div className="fixed top-0 right-0  z-10 left-0 bottom-0  bg-slate-50 opacity-40">
 			<div className="z-50">
 				<LinearProgress
 					variant="determinate"

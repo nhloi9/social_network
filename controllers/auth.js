@@ -110,7 +110,11 @@ const authController = {
 						console.log(err);
 						return next(new error('please login', 400));
 					}
-					const user = await User.findById(decode.id);
+					// console.log(decode);
+					const user = await User.findById(decode.id).populate(
+						'following followers'
+					);
+					// console.log(user);
 					if (!user) {
 						return next(new error('please login', 400));
 					}
@@ -134,7 +138,8 @@ const authController = {
 };
 const createAccessToken = (payload) => {
 	const access_token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-		expiresIn: '1h',
+		// expiresIn: 60 * 10,
+		expiresIn: '10 days',
 	});
 
 	return access_token;

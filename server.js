@@ -22,6 +22,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v2', require('./routes/authRouter'));
+app.use('/api/v2/user', require('./routes/userRouter'));
+
 app.use(errorHandler);
 
 const URI = process.env.MONGODB_URL;
