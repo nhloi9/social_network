@@ -4,7 +4,7 @@ import {GLOBALTYPES} from '../redux/actions/globalTypes';
 
 const client = axios.create({
 	baseURL: 'http://localhost:4000/api/v2/',
-	timeout: 3000, // 3 seconds
+	// timeout: 3000, // 3 seconds
 	withCredentials: true,
 });
 
@@ -49,7 +49,7 @@ client.interceptors.response.use(
 				});
 
 				originalRequest.headers.Authorization = `Bearer ${access_token}`;
-				console.log(4);
+				// console.log(4);
 				return client(originalRequest);
 			} catch (refresh_error) {
 				return Promise.reject(refresh_error);
@@ -79,4 +79,12 @@ export const putDataAPI = async (url, data, token) => {
 		// headers: {Authorization: token},
 	});
 	return res;
+};
+export const deleteDataApi = async (url, token) => {
+	const response = await client.delete(url, {
+		// headers: {
+		// 	Authorization: token,
+		// },
+	});
+	return response;
 };

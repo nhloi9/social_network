@@ -1,4 +1,5 @@
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {io} from 'socket.io-client';
 import './App.css';
 import RegisterPage from './pages/RegisterPage';
 import MessagePage from './pages/MessagePage.jsx';
@@ -15,17 +16,37 @@ import {useEffect} from 'react';
 import {refresh_token} from './redux/actions/authAction';
 import Header from './components/header/Header';
 import Protected from './router/Protected';
+import {getPosts} from './redux/actions/postAction';
+import DetailPostPage from './pages/DetailPostPage';
+import {getSavePosts} from './redux/actions/saveAction';
 // import {Outlet} from 'react-router-dom';
 
 function App() {
 	const dispatch = useDispatch();
 	const {token} = useSelector((state) => state.auth);
+	const modal = useSelector((state) => state.modal);
+	const {first} = useSelector((state) => state.homePost);
 	useEffect(() => {
 		dispatch(refresh_token());
 	}, [dispatch]);
+	useEffect(() => {
+		if (token && first) {
+			dispatch(getPosts());
+		}
+	}, [dispatch, token, first]);
+
+	useEffect(() => {
+		if (token && first) {
+			dispatch(getSavePosts());
+			const socket = io('http://localhost:4000');
+		}
+	}, [dispatch, token, first]);
+
+	useEffect(() => {
+		const socket = io('http://localhost:4000');
+	}, []);
 
 	const {theme} = useSelector((state) => state);
-	console.log('app');
 	// useEffect(() => {
 	// 	Array.from(document.getElementsByTagName('img'))?.forEach((element) => {
 	// 		if (theme) element.classList.add('invert');
@@ -45,10 +66,16 @@ function App() {
 				{/* <input
 					type="checkbox"
 					id="theme"
-					// hidden
+					hidden
 				/> */}
-				<div className={`${theme ? 'invert' : 'invert-0'} App`}>
+				<div
+					className={` App ${theme ? 'invert' : ''} ${
+						modal ? ' h-[100vh] overflow-hidden ' : ''
+					}`}
+				>
 					{token && <Header />}
+					{/* <div className=" fixed top-0 left-0 w-full h-[100vh] z-30 bg-black"></div> */}
+
 					{/* <Header /> */}
 					<Routes>
 						<Route
@@ -81,6 +108,14 @@ function App() {
 							element={
 								<Protected>
 									<ProfilePage />
+								</Protected>
+							}
+						></Route>
+						<Route
+							path="post/:id"
+							element={
+								<Protected>
+									<DetailPostPage />
 								</Protected>
 							}
 						></Route>

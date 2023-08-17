@@ -43,6 +43,9 @@ export const refresh_token = () => async (dispatch) => {
 			type: GLOBALTYPES.AUTH,
 			payload: res.data,
 		});
+		// if (trigger === 'init') {
+		// 	dispatch({type: GLOBALTYPES.USER, payload: res.data.user});
+		// }
 		dispatch({
 			type: GLOBALTYPES.ALERT,
 			payload: {},

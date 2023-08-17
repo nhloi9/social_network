@@ -8,9 +8,11 @@ const initialState = {
 	users: [],
 	err: false,
 	loading_follow: false,
+	posts: [],
+	ids: [],
 };
-export const profileReducer = createReducer(initialState, (bulder) => {
-	bulder
+export const profileReducer = createReducer(initialState, (builder) => {
+	builder
 		.addCase(PROFILE_TYPES.LOADING_FOLLOW, (state, action) => {
 			state.loading_follow = action.payload;
 		})
@@ -35,5 +37,11 @@ export const profileReducer = createReducer(initialState, (bulder) => {
 		})
 		.addCase(PROFILE_TYPES.UNFOLLOW, (state, action) => {
 			state.users = updateArray(state.users, action.payload);
+		})
+		.addCase(PROFILE_TYPES.GET_USER_POSTS, (state, action) => {
+			state.posts = [...state.posts, action.payload];
+		})
+		.addCase(PROFILE_TYPES.GET_ID, (state, action) => {
+			state.ids = [...state.ids, action.payload];
 		});
 });

@@ -12,14 +12,18 @@ export const upload = async (files) => {
 
 	files.forEach((file) => {
 		const formdata = new FormData();
-		formdata.append('file', file);
+		formdata.append('file', file.url ? file.url : file);
 		formdata.append('upload_preset', 'lxnys96r');
 		// axios.post(url, formdata).then((response) => {
 		// 	console.log(response.data.secure_url);
 		// });
 		promises.push(
-			axios.post(url, formdata).then((response) => response.data),
-			(err) => err
+			axios.post(url, formdata).then(
+				(response) => response.data,
+				(err) => {
+					throw err;
+				}
+			)
 		);
 	});
 	const images = await Promise.all(promises);

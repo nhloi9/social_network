@@ -12,6 +12,8 @@ export const PROFILE_TYPES = {
 	FOLLOW: 'FOLLOW',
 	UNFOLLOW: 'UNFOLLOW',
 	LOADING_FOLLOW: 'LOADING_FOLLOW',
+	GET_USER_POSTS: 'GET_USER_POSTS',
+	GET_ID: 'GET_PROFILE_ID',
 };
 
 export const getProfileUsers =
@@ -22,17 +24,20 @@ export const getProfileUsers =
 				type: PROFILE_TYPES.LOADING,
 				payload: true,
 			});
-			const res = await getDataApi(`user/${id}`);
+			const [res, res2] = await Promise.all([
+				getDataApi(`user/${id}`),
+				getDataApi(`post/user_posts/${id}`),
+			]);
 			dispatch({
 				type: PROFILE_TYPES.GET_USER,
 				payload: res.data.user,
 			});
-			// dispatch({
-			// 	type: GLOBALTYPES.ALERT,
-			// 	payload: {
-			// 		success: res.data.msg,
-			// 	},
-			// });
+			dispatch({
+				type: PROFILE_TYPES.GET_USER_POSTS,
+				payload: {posts: res2.data.posts, _id: id},
+			});
+
+			dispatch({type: PROFILE_TYPES.GET_ID, payload: id});
 			dispatch({
 				type: PROFILE_TYPES.LOADING,
 				payload: false,
@@ -132,7 +137,7 @@ export const getProfileUsers =
 
 export const updateProfileUser =
 	({userData, image}) =>
-	async (dispatch) => {
+	async (dispatch, getState) => {
 		try {
 			dispatch({
 				type: PROFILE_TYPES.UPDATE_USER_REQUEST,
@@ -251,3 +256,23 @@ export const unfollow =
 			dispatch({type: PROFILE_TYPES.LOADING_FOLLOW, payload: false});
 		}
 	};
+
+// export const getUserPosts = (userId) => async (dispatch, getState) => {
+// 	try {
+// 		const posts = await getDataApi(`/user_posts/${userId}`);
+// 		dispatch({
+// 			type: PROFILE_TYPES.GET_USER_POSTS,
+// 			payload: {
+// 				userId,
+// 				posts,
+// 			},
+// 		});
+// 	} catch (err) {
+// 		dispatch({
+// 			type: GLOBALTYPES.ALERT,
+// 			payload: {
+// 				error: err?.response?.data.msg,
+// 			},
+// 		});
+// 	}
+// };

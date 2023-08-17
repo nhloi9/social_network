@@ -62,24 +62,33 @@ const userController = {
 	},
 	follow: async (req, res, next) => {
 		try {
+			// console.log(req.body);
 			const id = req.params.id;
 			const other = await User.findById(id);
 			if (!other) {
 				return next(new error('user not found', 404));
 			}
-			const user = req.user;
-			if (!user.following.includes(id)) {
-				user.following.push(id);
-			}
+			// const user = req.user;
+			// console.log(user.toObject());
+			// if (user.following.every(item => item.toString()!==id)) {
+			// 	user.following.push(id);
+			// }
+			await User.updateOne(
+				{_id: req.user._id},
+				{
+					$addToSet: {
+						following: id,
+					},
+				}
+			);
 			await User.updateOne(
 				{_id: id},
 				{
 					$addToSet: {
-						followers: user._id,
+						followers: req.user._id,
 					},
 				}
 			);
-			await user.save();
 			res.status(200).json({
 				msg: 'Followed successfully',
 			});
@@ -94,21 +103,50 @@ const userController = {
 			if (!other) {
 				return next(new error('user not found', 404));
 			}
-			const user = req.user;
-			if (user.following.includes(id)) {
-				user.following.splice(user.following.indexOf(id), 1);
-			}
+			await User.updateOne(
+				{_id: req.user._id},
+				{
+					$pull: {
+						following: id,
+					},
+				}
+			);
 			await User.updateOne(
 				{_id: id},
 				{
 					$pullAll: {
-						followers: [user._id],
+						followers: [req.user._id],
 					},
 				}
 			);
-			await user.save();
 			res.status(200).json({
 				msg: 'Unfollowed successfully',
+			});
+		} catch (err) {
+			return next(new error(err.message, 500));
+		}
+	},
+	suggest: async (req, res, next) => {
+		try {
+			let suggestUser = await User.aggregate([
+				{$match: {_id: {$nin: [...req.user.following, req.user._id]}}},
+				{$sample: {size: req.query.num || 5}},
+				{
+					$lookup: {
+						from: 'users',
+						localField: 'following',
+						foreignField: '_id',
+						as: 'followingData',
+					},
+				},
+			]);
+			if (!suggestUser) {
+				return next(new error('user not found', 404));
+			}
+
+			return res.status(200).json({
+				msg: 'Success',
+				suggestUser,
 			});
 		} catch (err) {
 			return next(new error(err.message, 500));

@@ -3,7 +3,7 @@ export const validateRegister = ({email, password, fullName}) => {
 	if (!email) {
 		err.email = 'Email is required';
 	} else {
-		console.log(email);
+		// console.log(email);
 		if (!/^[\w.+-]+@gmail\.com$/.test(email))
 			err.email = 'Please enter a valid gmail';
 	}

@@ -1,9 +1,14 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 const redis = require('../redis/redis');
 const User = require('../models/user');
 const error = require('../error/error');
+const fs = require('fs');
+
+// fs.mkdirSync('/upload');
+// fs.mkdirSync(path.join(__dirname, 'upload'));
 
 const authController = {
 	register: async (req, res, next) => {
@@ -53,6 +58,8 @@ const authController = {
 		}
 	},
 	login: async (req, res, next) => {
+		console.log(path.resolve('/comment.js'));
+		console.log(__dirname);
 		try {
 			const {email, password} = req.body;
 			const user = await User.findOne({email})
@@ -61,7 +68,7 @@ const authController = {
 			if (!user) return next(new error('user not found', 404));
 			const isMatch = await bcrypt.compare(password, user.password);
 			if (!isMatch) return next(new error('incorrect password'));
-			console.log(3);
+			// console.log(3);
 			const access_token = createAccessToken({id: user._id});
 			const refresh_token = createRefreshToken({id: user._id});
 
@@ -83,7 +90,7 @@ const authController = {
 	},
 	logout: async (req, res, next) => {
 		try {
-			console.log(req.cookies);
+			// console.log(req.cookies);
 			const {refresh_token} = req.cookies;
 			await redis.del(refresh_token);
 			return res
@@ -107,7 +114,7 @@ const authController = {
 				process.env.REFRESH_TOKEN_SECRET,
 				async (err, decode) => {
 					if (err) {
-						console.log(err);
+						// console.log(err);
 						return next(new error('please login', 400));
 					}
 					// console.log(decode);
