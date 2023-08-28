@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close'
-import EmojiPicker from 'emoji-picker-react'
+// import EmojiPicker from 'emoji-picker-react'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate'
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto'
 import { Button } from 'antd'
@@ -12,6 +12,7 @@ import {
 } from '../../redux/actions/postAction'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useRef, useState } from 'react'
+import EmojiSelect from '../EmojiSelect'
 
 const CreatePost = ({ setOnCreatePost, post }) => {
   const { user } = useSelector(state => state.auth)
@@ -20,26 +21,52 @@ const CreatePost = ({ setOnCreatePost, post }) => {
   const dispatch = useDispatch()
   const { theme } = useSelector(state => state)
   const [openCamera, setOpenCamera] = useState(false)
-  const [openPicker, setOpenPicker] = useState(false)
+  // const [openPicker, setOpenPicker] = useState(false)
   const textareRef = useRef(null)
   const [images, setImages] = useState([])
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
-  const handleSelectEmoji = emoji => {
-    const textarea = textareRef.current
-    const startPosition = textarea.selectionStart
-    const endPosition = textarea.selectionEnd
-    const currentContent = textarea.value
-    const newContent =
-      currentContent.substring(0, startPosition) +
-      emoji.emoji +
-      currentContent.substring(endPosition)
-    textareRef.current.value = newContent
-    textareRef.current.focus()
-    textareRef.current.setSelectionRange(
-      startPosition + emoji.emoji.length,
-      startPosition + emoji.emoji.length
-    )
+  // const handleSelectEmoji = emoji => {
+  //   const textarea = textareRef.current
+  //   const startPosition = textarea.selectionStart
+  //   const endPosition = textarea.selectionEnd
+  //   const currentContent = textarea.value
+  //   const newContent =
+  //     currentContent.substring(0, startPosition) +
+  //     emoji.emoji +
+  //     currentContent.substring(endPosition)
+  //   textareRef.current.value = newContent
+  //   textareRef.current.focus()
+  //   textareRef.current.setSelectionRange(
+  //     startPosition + emoji.emoji.length,
+  //     startPosition + emoji.emoji.length
+  //   )
+  // }
+  const imgShow = image => {
+    const videoRegex = /video/
+
+    if (videoRegex.test(image.type)) {
+      return (
+        <video
+          controls
+          muted
+          src={image.url ? image.url : URL.createObjectURL(image)}
+          alt=''
+          className={`${
+            theme ? 'invert' : 'invert-0'
+          } block w-full h-full object-contain`}
+        />
+      )
+    } else
+      return (
+        <img
+          src={image.url ? image.url : URL.createObjectURL(image)}
+          alt=''
+          className={`${
+            theme ? 'invert' : 'invert-0'
+          } block w-full h-full object-contain`}
+        />
+      )
   }
 
   useEffect(() => {
@@ -198,7 +225,7 @@ const CreatePost = ({ setOnCreatePost, post }) => {
         }}
         className='fixed w-full h-[100vh] top-0 left-0 bg-gray-500 bg-opacity-50 z-[1000] flex items-center justify-center overflow-auto'
       >
-        <form className='create-post w-[450px] h-max max-h-[95vh] overflow-y-scroll bg-white rounded-md  px-5 py-3 relative'>
+        <form className='create-post w-[450px] h-min  max-h-[95vh]  bg-white rounded-md  px-5 py-3 relative'>
           <div className='flex justify-between items-center  pb-2 '>
             <h1 className=' text-[18px] font-[500] select-none'>
               {post ? 'Update Post' : 'Create post'}
@@ -227,36 +254,9 @@ const CreatePost = ({ setOnCreatePost, post }) => {
             maxLength={200}
           ></textarea>
           <div className='flex justify-end'>
-            <p
-              className='cursor-pointer opacity-50 select-none'
-              onClick={e => {
-                e.stopPropagation()
-
-                setOpenPicker(!openPicker)
-                textareRef.current.focus()
-              }}
-            >
-              &#128512;
-              {/* jdjkd */}
-            </p>
+            <EmojiSelect textRef={textareRef} css='right-6' />
           </div>
-          {openPicker && (
-            <div
-              className={`absolute z-50 right-6 ${
-                theme ? 'invert' : ''
-              } z-[1000]`}
-              onClick={e => {
-                e.stopPropagation()
-              }}
-            >
-              {/* can use emoji mart */}
-              <EmojiPicker
-                autoFocusSearch={false}
-                onEmojiClick={handleSelectEmoji}
-                height='400px'
-              />
-            </div>
-          )}
+
           {images && (
             <div className='flex pt-2 flex-wrap gap-1'>
               {images.map((image, i) => {
@@ -265,6 +265,7 @@ const CreatePost = ({ setOnCreatePost, post }) => {
                     key={i}
                     className='h-[100px] w-[130px] border border-blue-300 p-1 relative'
                   >
+                    {imgShow(image)}
                     <CloseIcon
                       fontSize='medium'
                       className='absolute top-0 right-0 text-red-400 cursor-pointer z-10'
@@ -273,13 +274,6 @@ const CreatePost = ({ setOnCreatePost, post }) => {
                         copy.splice(i, 1)
                         setImages(copy)
                       }}
-                    />
-                    <img
-                      src={image.url ? image.url : URL.createObjectURL(image)}
-                      alt=''
-                      className={`${
-                        theme ? 'invert' : 'invert-0'
-                      } block w-full h-full object-contain`}
                     />
                   </div>
                 )
@@ -346,7 +340,7 @@ const CreatePost = ({ setOnCreatePost, post }) => {
                   id='select-photo'
                   multiple
                   onChange={handeSelectPhoto}
-                  accept='image/*'
+                  accept='image/*, video/*'
                 />
               </label>
             </div>

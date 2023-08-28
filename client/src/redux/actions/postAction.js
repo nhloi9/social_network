@@ -1,3 +1,4 @@
+import {socket} from '../../socket';
 import {
 	deleteDataApi,
 	getDataApi,
@@ -6,6 +7,7 @@ import {
 } from '../../utils/fetchData';
 import {upload} from '../../utils/imageUpload';
 import {GLOBALTYPES, removeFromArray, updateArray} from './globalTypes';
+import {createNotify, deleteNotifiesBySender} from './notifyAction';
 
 export const POST_TYPES = {
 	CREATE: 'CREATE_POST',
@@ -20,6 +22,7 @@ export const POST_TYPES = {
 	UPDATE_POST: 'UPDATE_POST',
 	GET_POST: 'GET_POST',
 	DELETE_POST: 'DELETE_POST',
+	// RECEIVE_COMMENT: 'RECEIVE_COMMENT',
 };
 
 export const createPost =
@@ -41,7 +44,6 @@ export const createPost =
 					url: image.secure_url,
 					public_id: image.public_id,
 				})),
-				content,
 			});
 			dispatch({
 				type: POST_TYPES.CREATE,
@@ -58,6 +60,16 @@ export const createPost =
 					success: res?.data?.msg,
 				},
 			});
+			const msg = {
+				receiver: getState().auth.user.followers.map((user) => user._id),
+				target: res.data.post._id,
+				module: 'post',
+				url: `/post/${res.data.post._id}`,
+				text: 'added a new post',
+				image: images[0].secure_url,
+				content,
+			};
+			dispatch(createNotify(msg));
 		} catch (err) {
 			dispatch({
 				type: GLOBALTYPES.ALERT,
@@ -65,6 +77,16 @@ export const createPost =
 			});
 		}
 	};
+
+export const receiveComment = (comment) => (dispatch, getState) => {
+	const post = getState().homePost.posts.find(
+		(item) => item._id === comment.post
+	);
+	dispatch({
+		type: POST_TYPES.UPDATE_POST,
+		payload: {...post, comments: [...post.comments, comment]},
+	});
+};
 
 export const getPosts =
 	(page = 1) =>
@@ -74,6 +96,10 @@ export const getPosts =
 				type: POST_TYPES.GET_POSTS_REQUEST,
 			});
 			const res = await getDataApi(`/post?page=${page}&&limit=6`);
+			socket.emit(
+				'join_post',
+				res.data.posts.map((post) => post._id)
+			);
 			dispatch({
 				type: POST_TYPES.GET_POSTS_SUCCESS,
 				payload: res.data.posts,
@@ -153,6 +179,8 @@ export const updatePost =
 
 export const likePost = (post) => async (dispatch, getState) => {
 	try {
+		socket.emit('like', {post: post._id, user: getState().auth.user});
+
 		await putDataAPI(`/post/${post._id}/like`);
 		const newPost = {
 			...post,
@@ -175,6 +203,8 @@ export const likePost = (post) => async (dispatch, getState) => {
 
 export const unlikePost = (post) => async (dispatch, getState) => {
 	try {
+		socket.emit('unlike', post._id, getState().auth.user._id);
+
 		await putDataAPI(`/post/${post._id}/unlike`);
 		const newPost = {
 			...post,
@@ -197,7 +227,7 @@ export const createComment =
 	async (dispatch, getState) => {
 		try {
 			// console.log({content, post, commentRep});
-			const newComment = {
+			let newComment = {
 				content,
 				user: getState().auth.user,
 				tag: commentRep?.user,
@@ -208,7 +238,9 @@ export const createComment =
 						? commentRep.reply
 						: commentRep._id
 					: undefined,
+				post: post._id,
 			};
+
 			dispatch({
 				type: POST_TYPES.UPDATE_POST,
 				payload: {...post, comments: [...post.comments, newComment]},
@@ -223,14 +255,25 @@ export const createComment =
 				tag: commentRep?.user._id,
 				post: post._id,
 			});
+			newComment = {...newComment, _id: data.comment._id};
 
 			const newPost = {
 				...post,
-				comments: [
-					...post.comments,
-					{...data.comment, user: getState().auth.user, tag: commentRep?.user},
-				],
+				comments: [...post.comments, newComment],
 			};
+			socket.emit('comment', newComment);
+			const msg = {
+				// sender: getState().auth.user._id,
+				receiver: [commentRep ? commentRep.user._id : post.user._id],
+				target: data.comment._id,
+				module: 'comment',
+				url: `/post/${post._id}`,
+				text: commentRep ? 'mentioned you in a comment.' : 'commented on your post',
+				image: post.images[0].url,
+				content,
+			};
+			dispatch(createNotify(msg));
+
 			dispatch({type: POST_TYPES.UPDATE_POST, payload: newPost});
 		} catch (err) {
 			dispatch({
@@ -322,6 +365,13 @@ export const deleteComment = (comment, post) => async (dispatch, getState) => {
 	try {
 		await deleteDataApi(`/comment/${comment._id}`);
 
+		const msg = {
+			sender: comment.user._id,
+			target: comment._id,
+			receiver: [comment.tag ? comment.tag._id : post.user._id],
+			text: comment.tag ? 'mentioned you in a comment.' : 'commented on your post',
+		};
+		dispatch(deleteNotifiesBySender(msg));
 		const newPost = {
 			...post,
 			comments: removeFromArray(post.comments, comment),
@@ -374,6 +424,13 @@ export const deletePost = (id) => async (dispatch, getState) => {
 				success: res.data.msg,
 			},
 		});
+		const msg = {
+			sender: getState().auth.user._id,
+			target: id,
+			receiver: getState().auth.user.followers.map((user) => user._id),
+			text: 'added a new post',
+		};
+		dispatch(deleteNotifiesBySender(msg));
 	} catch (err) {
 		dispatch({
 			type: GLOBALTYPES.ALERT,

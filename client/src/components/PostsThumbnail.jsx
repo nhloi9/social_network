@@ -3,12 +3,32 @@ import { Link } from 'react-router-dom'
 import { BsChat, BsHeart } from 'react-icons/bs'
 import { LazyLoadImage } from 'react-lazy-load-image-component'
 import { useSelector } from 'react-redux'
+// // import markdownItAttrs from 'markdown-it-attrs'
+// import MarkdownIt from 'markdown-it'
+// const md = new MarkdownIt({
+//   html: true
+// })
+
+// // md.use(markdownItAttrs, {
+// //   // optional, these are default options
+// //   leftDelimiter: '{',
+// //   rightDelimiter: '}',
+// //   allowedAttributes: [] // empty array = all attributes are allowed
+// // })
+// var src = '<font color="color_name">Your colored text here</font>'
+// // var res = md.render('# markdown-it rulezz!')
+// var res = md.render(src)
 
 const PostsThumbnail = ({ posts }) => {
   const theme = useSelector(state => state.theme)
 
   return (
     <div className='grid grid-cols-1 gap-3  800px:grid-cols-2 1100px:grid-cols-3 max-w-[1000px] mx-auto'>
+      {/* {res} */}
+      {/* {res} */}
+      <br />
+      {/* <div dangerouslySetInnerHTML={{ __html: res }}></div>; */}
+      {/* <div dangerouslySetInnerHTML={{ __html: res }} /> */}
       {posts.map(post => (
         <Link to={`/post/${post._id}`}>
           <div className='w-full h-[300px]  relative group'>

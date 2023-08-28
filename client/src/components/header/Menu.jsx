@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { Link, redirect, useLocation } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import HomeIcon from '@mui/icons-material/Home'
 import TelegramIcon from '@mui/icons-material/Telegram'
 import ExploreIcon from '@mui/icons-material/Explore'
@@ -10,14 +10,20 @@ import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../../redux/actions/authAction'
 import { GLOBALTYPES } from '../../redux/actions/globalTypes'
 import Avatar from '../Avatar'
+import Notify from '../Notify'
 // import styles from '../../styles/styles';
 
 const NavMenu = () => {
+  const { data } = useSelector(state => state.notify)
   // const navigate = useNavigate();
   const location = useLocation()
   const { theme } = useSelector(state => state)
   const { user } = useSelector(state => state.auth)
   const dispatch = useDispatch()
+  const dropdownRef = useRef(null)
+
+  const [isOpenNotifications, setIsOpenNotifications] = useState(false)
+
   // let location = useLocation();
   const logoutHandle = () => {
     dispatch(logout())
@@ -67,7 +73,17 @@ const NavMenu = () => {
     },
     {
       label: 'notification',
-      icon: <FavoriteIcon fontSize='medium' />,
+      icon: (
+        <div ref={dropdownRef} className='relative'>
+          <div onClick={() => setIsOpenNotifications(!isOpenNotifications)}>
+            <FavoriteIcon fontSize='medium' />
+            <span className=' text-[13px] text-white absolute right-[35%] top-[10%]'>
+              {data.filter(noti => noti.isRead === false).length}
+            </span>
+          </div>
+          {isOpenNotifications && <Notify />}
+        </div>
+      ),
       path: '#'
     }
   ]
@@ -83,21 +99,30 @@ const NavMenu = () => {
   // 	// 	navigate('/');
   // 	// };
   // }, [navigate]);
-  useEffect(() => {
-    return () => {
-      return redirect('/')
+  // useEffect(() => {
+  //   return () => {
+  //     return redirect('/')
+  //   }
+  // }, [])
+  const handleClickOutside = e => {
+    if (dropdownRef.current && !dropdownRef.current?.contains(e.target)) {
+      setIsOpenNotifications(false)
     }
+  }
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   return (
-    <div className='menu flex justify-between gap-5 items-center'>
+    <div className='menu flex justify-between gap-5 items-center '>
       {navLinks.map(navLink => (
         <Link
           key={navLink.label}
-          className={isActive(navLink.path) ? '' : 'opacity-60'}
+          className={isActive(navLink.path) ? '' : 'text-gray-500'}
           to={navLink.path}
         >
-          {navLink.icon}
+          <div>{navLink.icon}</div>
         </Link>
       ))}
       <Dropdown

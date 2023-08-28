@@ -1,11 +1,12 @@
 import { Button } from 'antd'
 import React, { useRef, useState } from 'react'
-import EmojiPicker from 'emoji-picker-react'
+// import EmojiPicker from 'emoji-picker-react'
 import { useDispatch } from 'react-redux'
 import { createComment } from '../../redux/actions/postAction'
+import EmojiSelect from '../EmojiSelect'
 
 const InputComment = ({ post, comment, setOpen }) => {
-  const [openPicker, setOpenPicker] = useState(false)
+  // const [openPicker, setOpenPicker] = useState(false)
   const [focus, setFocus] = useState(false)
   const dispatch = useDispatch()
 
@@ -43,7 +44,7 @@ const InputComment = ({ post, comment, setOpen }) => {
         />
         {focus && (
           <div className='flex justify-between py-2 relative'>
-            <div
+            {/* <div
               className='cursor-pointer '
               onClick={() => setOpenPicker(!openPicker)}
             >
@@ -51,7 +52,7 @@ const InputComment = ({ post, comment, setOpen }) => {
             </div>
             {openPicker && (
               <div
-                className='absolute left-8 z-[50]'
+                className='absolute left-8 z-[500000000000000000000000000000000000000]'
                 onMouseOver={() => {
                   textRef.current.focus()
                 }}
@@ -74,10 +75,11 @@ const InputComment = ({ post, comment, setOpen }) => {
                   }}
                 />
               </div>
-            )}
+            )} */}
+            <EmojiSelect textRef={textRef} css={'left-2'} />
             <div>
               <Button
-                type='text '
+                type='text l-2 '
                 className='!mr-2'
                 onClick={() => setFocus(false)}
               >

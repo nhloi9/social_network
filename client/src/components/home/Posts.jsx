@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 // import InfiniteScroll from 'react-infinite-scroller'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import Lottie from 'react-lottie'
+// import image from './20194096.png'
 
 import PostCard from '../post_card/PostCard'
 import { getPosts } from '../../redux/actions/postAction'
@@ -23,6 +24,12 @@ const Posts = () => {
           No Posts
         </div>
       ) : ( */}
+      {/* <img src={image} alt='' className='w-[50px] h-[50px] object-contain' />
+      <img
+        src='/src/59810243-0a12-4f85-8ddf-fe880f7fea1c.png'
+        alt=''
+        className='w-[50px] h-[50px] object-contain'
+      /> */}
       <InfiniteScroll
         scrollThreshold={'10px'}
         endMessage={

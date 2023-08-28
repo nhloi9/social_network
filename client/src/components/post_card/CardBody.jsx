@@ -68,16 +68,31 @@ const CardBody = ({ post }) => {
       )}
       <div className='w-full  border my-2  p-2'>
         <Slider {...settings}>
-          {post.images?.map((image, index) => (
-            <img
-              key={index}
-              alt=''
-              src={image.url}
-              className={` w-full h-[150px] 400px:h-[300px] 800px:h-[400px] block object-contain ${
-                theme ? 'invert' : ''
-              }`}
-            />
-          ))}
+          {post.images?.map((image, index) => {
+            if (image.url.match(/video/))
+              return (
+                <video
+                  controls
+                  key={index}
+                  alt=''
+                  src={image.url}
+                  className={` w-full h-[150px] 400px:h-[300px] 800px:h-[400px] block object-contain ${
+                    theme ? 'invert' : ''
+                  }`}
+                />
+              )
+            else
+              return (
+                <img
+                  key={index}
+                  alt=''
+                  src={image.url}
+                  className={` w-full h-[150px] 400px:h-[300px] 800px:h-[400px] block object-contain ${
+                    theme ? 'invert' : ''
+                  }`}
+                />
+              )
+          })}
         </Slider>
       </div>
     </div>

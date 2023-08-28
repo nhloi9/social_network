@@ -1,10 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {} from 'react-router-dom'
 import Status from '../components/home/Status.jsx'
 import Posts from '../components/home/Posts.jsx'
 import Suggest from '../components/home/Suggest.jsx'
 
 const HomePage = () => {
+  useEffect(() => {
+    console.log('home page mount')
+    return () => {
+      console.log('home page unmount')
+    }
+  }, [])
+
   return (
     <div className='w-full max-w-[1000px] mx-auto 800px:flex'>
       <div className='w-full px-5 800px:w-[65%] '>

@@ -1,5 +1,4 @@
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
-import {io} from 'socket.io-client';
 import './App.css';
 import RegisterPage from './pages/RegisterPage';
 import MessagePage from './pages/MessagePage.jsx';
@@ -19,6 +18,10 @@ import Protected from './router/Protected';
 import {getPosts} from './redux/actions/postAction';
 import DetailPostPage from './pages/DetailPostPage';
 import {getSavePosts} from './redux/actions/saveAction';
+import {socket} from './socket';
+import {getNotifies} from './redux/actions/notifyAction';
+import MessageDetailPage from './pages/MessageDetailPage';
+import {getConversations} from './redux/actions/conversationAction';
 // import {Outlet} from 'react-router-dom';
 
 function App() {
@@ -32,19 +35,44 @@ function App() {
 	useEffect(() => {
 		if (token && first) {
 			dispatch(getPosts());
-		}
-	}, [dispatch, token, first]);
-
-	useEffect(() => {
-		if (token && first) {
 			dispatch(getSavePosts());
-			const socket = io('http://localhost:4000');
+			dispatch({
+				type: 'socket/connect',
+			});
+			dispatch(getNotifies());
+			dispatch(getConversations());
 		}
 	}, [dispatch, token, first]);
-
 	useEffect(() => {
-		const socket = io('http://localhost:4000');
+		socket.on('disconnect', () => {
+			console.log('disconnect');
+		});
 	}, []);
+	useEffect(() => {
+		if (!('Notification' in window)) {
+		} else {
+			if (Notification.permission !== 'granted') {
+				Notification.requestPermission();
+			}
+		}
+	}, [dispatch]);
+
+	// useEffect(() => {
+	// 	if (token && first) {
+	// 		// const socket = io('http://localhost:4000');
+	// 		// socket.on('connect', () => {
+	// 		// 	console.log('client', socket.id); // x8WIv7-mJelg7on_ALbx
+	// 		// });
+	// 		// socket.on('disconnect', (reason) => {
+	// 		// 	console.log('client ger disconnectd', socket.id, 'because', reason);
+	// 		// });
+	// 	}
+	// }, [dispatch, token, first]);
+
+	// useEffect(() => {
+	// 	const socket = io('http://localhost:4000');
+	// 	console.log('app');
+	// }, []);
 
 	const {theme} = useSelector((state) => state);
 	// useEffect(() => {
@@ -62,7 +90,13 @@ function App() {
 	return (
 		<div>
 			<BrowserRouter>
+				{/* <img
+					className="block w-[100px] h-[100px] object-cover"
+					src="http://123.30.235.196:5388/api/static/1dd55a4741c0939ecad1-wbl5..jpg"
+					alt=""
+				/> */}
 				<Alert />
+				{/* {token && <SocketClient />} */}
 				{/* <input
 					type="checkbox"
 					id="theme"
@@ -92,6 +126,14 @@ function App() {
 							element={
 								<Protected>
 									<MessagePage />
+								</Protected>
+							}
+						></Route>
+						<Route
+							path="/message/:id"
+							element={
+								<Protected>
+									<MessageDetailPage />
 								</Protected>
 							}
 						></Route>

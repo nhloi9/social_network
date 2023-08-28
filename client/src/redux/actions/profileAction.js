@@ -1,6 +1,7 @@
 import {getDataApi, putDataAPI} from '../../utils/fetchData';
 import {GLOBALTYPES, addToArray, removeFromArray} from './globalTypes';
 import {upload} from '../../utils/imageUpload';
+import {socket} from '../../socket';
 export const PROFILE_TYPES = {
 	LOADING: 'LOANGING_PROFILE',
 	GET_USER: 'GET_PROFILE_USER',
@@ -183,6 +184,7 @@ export const updateProfileUser =
 export const follow =
 	({user, other}) =>
 	async (dispatch, getState) => {
+		socket.emit('follow', user, other._id);
 		try {
 			dispatch({type: PROFILE_TYPES.LOADING_FOLLOW, payload: other._id});
 			await putDataAPI(`user/follow/${other._id}`, null);
@@ -215,6 +217,7 @@ export const follow =
 export const unfollow =
 	({user, other}) =>
 	async (dispatch, getState) => {
+		socket.emit('unfollow', getState().auth.user._id, other._id);
 		try {
 			dispatch({type: PROFILE_TYPES.LOADING_FOLLOW, payload: other._id});
 

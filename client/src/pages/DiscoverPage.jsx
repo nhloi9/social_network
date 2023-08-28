@@ -22,7 +22,7 @@ const DiscoverPage = () => {
   }, [dispatch, first])
 
   return (
-    <div className='w-full 1100px:w-[80%] mx-auto'>
+    <div className='w-full 1100px:w-[80%] mx-auto mt-4'>
       {!loading && posts.length === 0 ? (
         <div className='w-full text-center mt-[100px]'>No Post</div>
       ) : (
@@ -38,9 +38,18 @@ const DiscoverPage = () => {
                   alt=''
                 />
                 <div className='absolute opacity-0 group-hover:opacity-[1]   top-0 w-full h-full bg-[#00000098] flex justify-center items-center gap-3 transition'>
-                  <BsChat color='white' size={35} />
-                  <span>{post.likes.length}</span>
-                  <BsHeart color='white' size={35} />
+                  <div className='text-center'>
+                    <BsChat color='white' size={35} />
+                    <span className='text-white text-[20px]'>
+                      {post.comments.length}
+                    </span>
+                  </div>
+                  <div className='text-center'>
+                    <BsHeart color='white' size={35} />
+                    <span className='text-white text-[20px]'>
+                      {post.likes.length}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>

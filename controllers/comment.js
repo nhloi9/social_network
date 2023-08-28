@@ -1,5 +1,5 @@
 const error = require('../error/error');
-const comment = require('../models/comment');
+// const comment = require('../models/comment');
 const Comment = require('../models/comment');
 const commentController = {
 	create: async (req, res, next) => {
@@ -51,7 +51,11 @@ const commentController = {
 	delete: async (req, res, next) => {
 		try {
 			const comment = await Comment.findById(req.params.id).populate('post');
-			if (comment.user == req.user._id || comment.post.user == req.user._id) {
+			console.log({commentUser: comment.user, user: req.user._id});
+			if (
+				comment.user.equals(req.user._id) ||
+				comment.post.user.equals(req.user._id)
+			) {
 				await Comment.findOneAndDelete({
 					_id: req.params.id,
 				});

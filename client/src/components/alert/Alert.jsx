@@ -22,6 +22,12 @@ const Alert = () => {
 
   return (
     <div className='fixed top-0 w-full z-[9999999999999999999999999]'>
+      <audio controls id='notification_sound' className='hidden'>
+        <source
+          src={require('../../audio/mixkit-achievement-bell-600.wav')}
+          type='audio/ogg'
+        />
+      </audio>
       {alert.loading && <Loader setLoadingSuccess={setLoadingSuccess} />}
       {loadingSuccess && (
         <LinearProgress color='primary' variant='determinate' value={100} />

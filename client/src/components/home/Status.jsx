@@ -26,9 +26,10 @@ const Status = () => {
       <div className='shadow-[0_0_1px] hover:shadow-[0_0_5px_gray]  h-[80px] p-4 rounded-md flex items-center  justify-between gap-2 '>
         <Avatar url={user?.avatar} size={'big-avatar'} />
         <input
+          readOnly
           type='text'
           className='block w-full h-[50px] outline-none bg-gray-100 rounded-[20px] pl-3 cursor-pointer hover:bg-gray-200'
-          placeholder={`${user?.fullname} ơi, bạn đang nghĩ gì thế ?`}
+          placeholder={`${user?.username} ơi, bạn đang nghĩ gì thế ?`}
           // disabled
           onClick={() => {
             setOnCreatePost(true)

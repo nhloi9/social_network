@@ -7,7 +7,7 @@ export const validImage = (file) => {
 	return '';
 };
 export const upload = async (files) => {
-	const url = 'https://api.cloudinary.com/v1_1/dgivfguja/image/upload';
+	const url = 'https://api.cloudinary.com/v1_1/dgivfguja/auto/upload';
 	const promises = [];
 
 	files.forEach((file) => {
