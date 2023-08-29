@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
 
 	//message
 	socket.on('message', (message) => {
-		socket.to('user_' + message.receiver).emit('message', message);
+		socket.to('user_' + message.receiver._id).emit('message', message);
 	});
 
 	socket.on('disconnect', (reason) => {

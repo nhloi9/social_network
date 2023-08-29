@@ -23,8 +23,13 @@ const RightSide = () => {
   const handleCreateMessage = e => {
     e.preventDefault()
     const message = {
-      sender: user._id,
-      receiver: active.other._id,
+      sender: {
+        _id: user._id,
+        fullname: user.fullname,
+        username: user.username,
+        avatar: user.avatar
+      },
+      receiver: active.other,
       text: textRef.current.value,
       conversation: active._id
     }
@@ -78,9 +83,9 @@ const RightSide = () => {
                     startOfWeek(new Date(messages[index - 1].createdAt), {
                       weekStartsOn: 1
                     }).getDate() ? (
-                    <div>
+                    <div className='w-full flex justify-center'>
                       <h1 className=' text-[13px]'>
-                        {format(new Date(message.createdAt), 'EEEE h:mm a')}
+                        {format(new Date(message.createdAt), 'MMMM d, h:mm a')}
                       </h1>
                     </div>
                   ) : new Date(message.createdAt).getDate() !==

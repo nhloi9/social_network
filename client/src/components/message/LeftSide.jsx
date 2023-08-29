@@ -90,6 +90,8 @@ const LeftSide = () => {
             conversation={con}
             key={con._id}
             other={con.members.find(item => item._id !== user._id)}
+            user={user}
+            dispatch={dispatch}
           />
         ))}
       </div>
@@ -97,8 +99,9 @@ const LeftSide = () => {
   )
 }
 
-const ConversationCard = ({ conversation, other, active }) => {
-  const dispatch = useDispatch()
+const ConversationCard = ({ conversation, other, active, dispatch }) => {
+  const indexOfOther = conversation.members.indexOf(other)
+  const indexOfUser = [0, 1].find(index => index !== indexOfOther)
   return (
     <div
       className={`w-full flex justify-start  items-start p-1 my-2 cursor-pointer ${
@@ -114,7 +117,15 @@ const ConversationCard = ({ conversation, other, active }) => {
       <Avatar url={other.avatar} size={'big-avatar'} />
       <div className='mx-1 flex flex-col justify-center'>
         <h1 className='font-[500]'>{other.username}</h1>
-        <p className='text-gray-400'>{conversation.text} </p>
+        <p
+          className={`${
+            conversation.seen[indexOfUser] === false
+              ? 'text-gray-950'
+              : 'text-gray-400'
+          }`}
+        >
+          {conversation.text}{' '}
+        </p>
       </div>
     </div>
   )

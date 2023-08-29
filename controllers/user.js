@@ -8,17 +8,17 @@ const userController = {
 			const users = await User.find({
 				_id: {$ne: req.user._id},
 				$or: [
-					// {username: {$regex: term.trim(), $options: 'ui'}},
-					{
-						username: {
-							$regex: {
-								query: term.trim(),
-								allowAnalyzedField: true,
-							},
-						},
-					},
+					{username: {$regex: term.trim(), $options: 'i'}},
 					// {
-					// 	fullname: {$regex: term.trim().replace(/\s\s+/g, ' '), $options: RegexO},
+					// 	username: {
+					// 		$regex: {
+					// 			query: term.trim(),
+					// 			allowAnalyzedField: true,
+					// 		},
+					// 	},
+					// },
+					// // {
+					{fullname: {$regex: term.trim().replace(/\s\s+/g, ' '), $options: 'i'}},
 					// },
 				],
 			}).select('avatar fullname username');

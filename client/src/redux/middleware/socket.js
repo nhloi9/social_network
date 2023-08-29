@@ -1,3 +1,4 @@
+import {CONVERSATION_TYPES} from '../actions/conversationAction';
 import {GLOBALTYPES, addToArray, removeFromArray} from '../actions/globalTypes';
 import {NOTIFY_TYPES} from '../actions/notifyAction';
 import {POST_TYPES, receiveComment} from '../actions/postAction';
@@ -100,7 +101,47 @@ export const socketMiddleware = (socket) => (params) => (next) => (action) => {
 
 			//receive message
 			socket.on('message', (message) => {
-				console.log(message);
+				//update chat
+				const chat = getState().conversation.chats.find(
+					(item) => item._id === message.conversation
+				);
+				if (chat)
+					dispatch({
+						type: CONVERSATION_TYPES.UPDATE_CHAT,
+						payload: {...chat, messages: [message, ...chat.messages]},
+					});
+				//update conversations
+				const conversation = getState().conversation.conversations.find(
+					(item) => item._id === message.conversation
+				);
+				const user = getState().auth.user;
+
+				if (conversation) {
+					const index = conversation.members.indexOf(
+						conversation.members.find((member) => member._id === user._id)
+					);
+					dispatch({
+						type: CONVERSATION_TYPES.UPDATE_CONVERSATION_SORT,
+						payload: {
+							...conversation,
+							text: message.text,
+							media: message.media || [],
+							seen: index ? [true, false] : [false, true],
+						},
+					});
+				} else {
+					const newConversation = {
+						_id: message.conversation,
+						members: [message.sender, message.receiver],
+						text: message.text,
+						media: message.media,
+						seen: [false, true],
+					};
+					dispatch({
+						type: CONVERSATION_TYPES.ADD_CONVERSATION,
+						payload: newConversation,
+					});
+				}
 			});
 
 			break;
