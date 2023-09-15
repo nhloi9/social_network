@@ -2,6 +2,7 @@ import {getDataApi, putDataAPI} from '../../utils/fetchData';
 import {GLOBALTYPES, addToArray, removeFromArray} from './globalTypes';
 import {upload} from '../../utils/imageUpload';
 import {socket} from '../../socket';
+import {createNotify} from './notifyAction';
 export const PROFILE_TYPES = {
 	LOADING: 'LOANGING_PROFILE',
 	GET_USER: 'GET_PROFILE_USER',
@@ -184,10 +185,12 @@ export const updateProfileUser =
 export const follow =
 	({user, other}) =>
 	async (dispatch, getState) => {
-		socket.emit('follow', user, other._id);
 		try {
 			dispatch({type: PROFILE_TYPES.LOADING_FOLLOW, payload: other._id});
 			await putDataAPI(`user/follow/${other._id}`, null);
+			socket.emit('follow', user, other._id);
+			socket.emit('check_online', [other._id]);
+
 			let newOther = getState().profile.users.find(
 				(item) => item._id === other._id
 			);
@@ -198,7 +201,16 @@ export const follow =
 					payload: newOther,
 				});
 			}
-
+			const msg = {
+				receiver: [other._id],
+				target: other._id,
+				module: '',
+				url: `/profile/${user._id}`,
+				text: 'followed you ',
+				image: '',
+				content: '',
+			};
+			dispatch(createNotify(msg));
 			dispatch({
 				type: GLOBALTYPES.USER,
 				payload: {...user, following: addToArray(user.following, other)},
@@ -247,6 +259,10 @@ export const unfollow =
 			dispatch({
 				type: GLOBALTYPES.USER,
 				payload: {...user, following: removeFromArray(user.following, other)},
+			});
+			dispatch({
+				type: GLOBALTYPES.OFFLINE,
+				payload: other._id,
 			});
 			dispatch({type: PROFILE_TYPES.LOADING_FOLLOW, payload: false});
 		} catch (err) {

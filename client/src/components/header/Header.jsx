@@ -13,7 +13,7 @@ const Header = () => {
           className='uppercase text-[22px] font-[700] cursor-pointer'
           onClick={() => navigate('/')}
         >
-          v-network
+          Social network
         </h1>
       </div>
       <div className='800px:w-[400px]'>

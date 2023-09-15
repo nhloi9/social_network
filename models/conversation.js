@@ -8,9 +8,8 @@ const conversationSchema = new mongoose.Schema(
 				ref: 'user',
 			},
 		],
-		seen: [Boolean],
-		text: {type: String},
-		media: Array,
+		seen: {type: [Boolean], default: [false, false]},
+		lastMessage: {type: Object},
 	},
 	{
 		timestamps: true,

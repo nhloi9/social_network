@@ -6,7 +6,16 @@ const cookieParser = require('cookie-parser');
 const {createServer} = require('http');
 const {Server} = require('socket.io');
 const path = require('path');
+const User = require('./models/user');
+// const {PeerServer} = require('peer');
+const {ExpressPeerServer} = require('peer');
 // const {socketServer} = require('./socketServer');
+
+// PeerServer({
+// 	port: 9000,
+// 	path: '/myapp',
+// 	// proxied: true,
+// });
 
 const errorHandler = require('./error/errorHandler');
 const notify = require('./models/notify');
@@ -43,8 +52,20 @@ const URI = process.env.MONGODB_URL;
 
 const port = process.env.PORT || 4000;
 
-//socket.io
 const httpServer = createServer(app);
+
+//peer server
+const peerServer = ExpressPeerServer(httpServer, {
+	proxied: true,
+	debug: true,
+	path: '/',
+	ssl: {},
+});
+app.use(peerServer);
+// ExpressPeerServer(httpServer, {path: '/'});
+
+//socket.io
+
 const io = new Server(httpServer, {
 	cors: {
 		origin: 'http://localhost:3000',
@@ -64,12 +85,19 @@ io.on('connection', (socket) => {
 	console.log('user connection with socket id ' + socket.id);
 
 	//join user
-	socket.on('join_user', (userId) => {
-		socket.join('user_' + userId);
+	socket.on('join_user', (userId, followers) => {
+		//store followers in session
+		// socket.followers = followers
+		socket.userId = userId;
+		//send online to followers
 		const clients = io.sockets.adapter.rooms.get('user_' + userId);
-		users.push({user: userId, socket: socket.id});
-
-		console.log(clients);
+		if (!clients) {
+			followers?.forEach((follower) =>
+				socket.to('user_' + follower).emit('check_online', [userId])
+			);
+		}
+		socket.join('user_' + userId);
+		// users.push({user: userId, socket: socket.id});
 	});
 
 	//join post
@@ -128,8 +156,33 @@ io.on('connection', (socket) => {
 		socket.to('user_' + message.receiver._id).emit('message', message);
 	});
 
-	socket.on('disconnect', (reason) => {
+	//seen message
+	socket.on('seen_conversation', (conversationId, otherId) => {
+		socket.to('user_' + otherId).emit('seen_conversation', conversationId);
+	});
+
+	//check list following online
+	socket.on('check_online', (following) => {
+		const online = following.filter(
+			(user) => io.sockets.adapter.rooms.get('user_' + user)?.size > 0
+		);
+		socket.emit('check_online', online);
+	});
+
+	//call
+	socket.on('call', (msg) => {
+		socket.to('user_' + msg.receiver).emit('call', msg);
+	});
+
+	socket.on('disconnect', async (reason) => {
 		console.log('server ger disconnectd', socket.id, 'because', reason);
+		if (!io.sockets.adapter.rooms.get('user_' + socket.userId)) {
+			console.log(socket.userId);
+			const followers = (await User.findById(socket.userId))?.followers;
+			followers?.forEach((user) =>
+				socket.to('user_' + user).emit('offline', socket.userId)
+			);
+		}
 	});
 
 	// console.log(users);

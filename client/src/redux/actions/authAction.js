@@ -102,6 +102,7 @@ export const logout = () => async (dispatch) => {
 			payload: {},
 		});
 		// window.location.href = '/';
+		window.location.reload();
 	} catch (err) {
 		dispatch({
 			type: GLOBALTYPES.ALERT,

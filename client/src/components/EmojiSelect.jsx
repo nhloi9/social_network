@@ -1,13 +1,24 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import EmojiPicker from 'emoji-picker-react'
 import { useSelector } from 'react-redux'
 
 const EmojiSelect = ({ textRef, css }) => {
   const [openPicker, setOpenPicker] = useState(false)
   const theme = useSelector(state => state.theme)
+  const dropdownRef = useRef(null)
+  const handleClickOutside = e => {
+    if (dropdownRef.current && !dropdownRef.current?.contains(e.target)) {
+      setOpenPicker(false)
+    }
+  }
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <div
+      ref={dropdownRef}
       className='cursor-pointer relative h-[20px] '
       onClick={e => {
         e.stopPropagation()

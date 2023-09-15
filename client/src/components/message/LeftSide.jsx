@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import Avatar from '../Avatar'
-import { useNavigate } from 'react-router-dom'
 import UserCard from '../UserCard'
-import { getDataApi, postDataAPI } from '../../utils/fetchData'
+import { getDataApi } from '../../utils/fetchData'
 import SearchOffIcon from '@mui/icons-material/SearchOff'
 import SearchIcon from '@mui/icons-material/Search'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   CONVERSATION_TYPES,
-  createConversation
+  createConversation,
+  seenConversation
 } from '../../redux/actions/conversationAction'
 
 const LeftSide = () => {
@@ -17,7 +17,10 @@ const LeftSide = () => {
   const [term, setTerm] = useState('')
   const [users, setUsers] = useState([])
   const { conversations } = useSelector(state => state.conversation)
+  const onlineList = useSelector(state => state.online)
+
   const dispatch = useDispatch()
+
   useEffect(() => {
     if (term) {
       try {
@@ -33,6 +36,13 @@ const LeftSide = () => {
   }, [term])
   const handleClickUser = user => {
     dispatch(createConversation(user))
+  }
+
+  const checkOnline = user => {
+    return onlineList?.includes(user)
+  }
+  const checkFollowing = userId => {
+    return user.following?.find(item => item._id === userId)
   }
   return (
     <div className='w-full h-full '>
@@ -83,51 +93,79 @@ const LeftSide = () => {
           </div>
         )}
       </div>
-      <div className='w-full  h-[calc(100vh-210px)] overflow-y-scroll'>
-        {conversations.map(con => (
-          <ConversationCard
-            active={active}
-            conversation={con}
-            key={con._id}
-            other={con.members.find(item => item._id !== user._id)}
-            user={user}
-            dispatch={dispatch}
-          />
-        ))}
+      <div className='w-full  h-[calc(100vh-230px)] 800px:h-[calc(100vh-210px)] overflow-y-scroll'>
+        {conversations.map(con => {
+          const other = con.members.find(item => item._id !== user._id)
+          return (
+            <ConversationCard
+              online={checkOnline(other._id)}
+              active={active}
+              conversation={con}
+              key={con._id}
+              other={other}
+              user={user}
+              dispatch={dispatch}
+              following={checkFollowing(other._id)}
+            />
+          )
+        })}
       </div>
     </div>
   )
 }
 
-const ConversationCard = ({ conversation, other, active, dispatch }) => {
+const ConversationCard = ({
+  conversation,
+  other,
+  active,
+  dispatch,
+  online,
+  following
+}) => {
   const indexOfOther = conversation.members.indexOf(other)
   const indexOfUser = [0, 1].find(index => index !== indexOfOther)
   return (
-    <div
-      className={`w-full flex justify-start  items-start p-1 my-2 cursor-pointer ${
-        active?._id === conversation._id && 'bg-gray-300'
-      }`}
-      onClick={() => {
-        dispatch({
-          type: CONVERSATION_TYPES.ACTIVE_CONVERSATION,
-          payload: { _id: conversation._id, other }
-        })
-      }}
-    >
-      <Avatar url={other.avatar} size={'big-avatar'} />
-      <div className='mx-1 flex flex-col justify-center'>
-        <h1 className='font-[500]'>{other.username}</h1>
-        <p
-          className={`${
-            conversation.seen[indexOfUser] === false
-              ? 'text-gray-950'
-              : 'text-gray-400'
+    <>
+      {conversation.lastMessage && (
+        <div
+          className={`w-full flex justify-start  items-start p-1 my-2 cursor-pointer ${
+            active?._id === conversation._id && 'bg-gray-300'
           }`}
+          onClick={() => {
+            dispatch(seenConversation(conversation._id, other._id))
+            dispatch({
+              type: CONVERSATION_TYPES.ACTIVE_CONVERSATION,
+              payload: { _id: conversation._id, other }
+            })
+          }}
         >
-          {conversation.text}{' '}
-        </p>
-      </div>
-    </div>
+          <div className='relative'>
+            <Avatar url={other.avatar} size={'big-avatar'} />
+            {following && (
+              <div
+                className={`${
+                  online ? 'bg-green-500 ' : 'bg-gray-300'
+                } w-4 h-4   rounded-full absolute top-[2px] right-0`}
+              ></div>
+            )}
+          </div>
+          <div className='mx-1 flex flex-col justify-center'>
+            <h1 className='font-[500]'>{other.username}</h1>
+            <p
+              className={`${
+                conversation.seen[indexOfUser] === false
+                  ? 'text-black drop-shadow-2xl font-[500] '
+                  : 'text-gray-400'
+              }`}
+            >
+              {conversation.lastMessage?.text?.length > 15
+                ? conversation.lastMessage?.text?.slice(0, 15) + '...'
+                : conversation.lastMessage?.text}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 export default LeftSide

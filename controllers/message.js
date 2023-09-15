@@ -19,8 +19,8 @@ const messageController = {
 			const existConversation = await ConverSation.findOne({_id: conversation});
 			const index = existConversation.members.indexOf(req.user._id);
 			existConversation.seen = index ? [false, true] : [true, false];
-			existConversation.text = text;
-			existConversation.media = media;
+			existConversation.lastMessage = message;
+
 			await existConversation.save();
 			return res.status(200).json({message});
 		} catch (err) {
@@ -31,12 +31,19 @@ const messageController = {
 		try {
 			const conversation = await ConverSation.findById(req.params.id);
 			if (conversation?.members.includes(req.user._id)) {
-				const query = new queryFeature(
-					Message.find({conversation: req.params.id}).sort({createdAt: -1}),
-					req.query
-				).pagination();
-				const messages = await query;
-				res.status(200).json({messages});
+				const {limitPerPage = 10, cusorTime = new Date().getTime()} = req.query;
+				const messages = await Message.find({
+					conversation: req.params.id,
+					createdAt: {$lt: new Date(+cusorTime)},
+				})
+					.limit(limitPerPage + 1)
+					.sort({createdAt: -1});
+				let newCusorTime;
+				if (messages.length > limitPerPage) {
+					newCusorTime = messages[limitPerPage - 1].createdAt.getTime();
+					messages.splice(limitPerPage, 1);
+				}
+				res.status(200).json({messages, cusorTime: newCusorTime});
 			} else next(new error('Conversation not found'));
 		} catch (err) {
 			next(new error(err.message, 500));

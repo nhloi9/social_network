@@ -50,7 +50,7 @@ const notifyController = {
 					path: 'sender',
 					select: '_id username avatar',
 				})
-				.sort({isRead: 1, createdAt: -1});
+				.sort({createdAt: -1});
 			res.status(200).json({msg: 'success', notifies});
 		} catch (err) {
 			next(new error(err.message, 500));

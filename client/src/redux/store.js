@@ -12,6 +12,8 @@ import {socketMiddleware} from './middleware/socket';
 import {socket} from '../socket';
 import {notifyReducer} from './reducers/notifyReducer';
 import {conversationReducer} from './reducers/conversation';
+import {onlineReducer} from './reducers/onlineFollowing';
+import {callReducer} from './reducers/callReducer';
 
 export const store = configureStore({
 	reducer: {
@@ -26,6 +28,8 @@ export const store = configureStore({
 		discover: discoverReducer,
 		save: saveReducer,
 		conversation: conversationReducer,
+		online: onlineReducer,
+		call: callReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware().concat(socketMiddleware(socket)),

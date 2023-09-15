@@ -15,6 +15,7 @@ const conversationController = {
 				members: {$all: [req.user._id, req.body.other]},
 			});
 			if (!conversation) {
+				console.log(req.body.other);
 				conversation = await Conversation.create({
 					members: [req.user._id, req.body.other],
 				});
@@ -32,8 +33,10 @@ const conversationController = {
 		try {
 			const conversations = await Conversation.find({
 				members: req.user._id,
-				seen: {$exists: true},
-			}).populate('members', '_id avatar username fullname');
+				lastMessage: {$exists: true},
+			})
+				.populate('members', '_id avatar username fullname')
+				.sort({'lastMessage.createdAt': -1});
 
 			return res.status(201).json({
 				conversations,
@@ -51,6 +54,16 @@ const conversationController = {
 
 			return res.status(201).json({
 				conversation,
+			});
+		} catch (err) {
+			return next(new error(err.message, 500));
+		}
+	},
+	seen: async (req, res, next) => {
+		try {
+			await Conversation.findByIdAndUpdate(req.params.id, {seen: [true, true]});
+			return res.status(201).json({
+				msg: 'success',
 			});
 		} catch (err) {
 			return next(new error(err.message, 500));

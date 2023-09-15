@@ -1,4 +1,5 @@
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {Peer} from 'peerjs';
 import './App.css';
 import RegisterPage from './pages/RegisterPage';
 import MessagePage from './pages/MessagePage.jsx';
@@ -22,6 +23,7 @@ import {socket} from './socket';
 import {getNotifies} from './redux/actions/notifyAction';
 import MessageDetailPage from './pages/MessageDetailPage';
 import {getConversations} from './redux/actions/conversationAction';
+import CallModal from './components/message/CallModal';
 // import {Outlet} from 'react-router-dom';
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
 	const {token} = useSelector((state) => state.auth);
 	const modal = useSelector((state) => state.modal);
 	const {first} = useSelector((state) => state.homePost);
+	const {call} = useSelector((state) => state);
 	useEffect(() => {
 		dispatch(refresh_token());
 	}, [dispatch]);
@@ -41,6 +44,14 @@ function App() {
 			});
 			dispatch(getNotifies());
 			dispatch(getConversations());
+			// const peer = new Peer(undefined, {
+			// 	host: 'localhost',
+			// 	port: 4000,
+			// 	path: '/',
+			// 	// secure: true,
+			// });
+			// window.peer = peer;
+			// console.log(window.peer);
 		}
 	}, [dispatch, token, first]);
 	useEffect(() => {
@@ -87,6 +98,8 @@ function App() {
 	// 		} else element.classList.add('invert-0');
 	// 	});
 	// }, []);
+
+	useEffect(() => {}, []);
 	return (
 		<div>
 			<BrowserRouter>
@@ -96,6 +109,7 @@ function App() {
 					alt=""
 				/> */}
 				<Alert />
+				{call && <CallModal call={call} />}
 				{/* {token && <SocketClient />} */}
 				{/* <input
 					type="checkbox"

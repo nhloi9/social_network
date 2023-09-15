@@ -225,7 +225,7 @@ const CreatePost = ({ setOnCreatePost, post }) => {
         }}
         className='fixed w-full h-[100vh] top-0 left-0 bg-gray-500 bg-opacity-50 z-[1000] flex items-center justify-center overflow-auto'
       >
-        <form className='create-post w-[450px] h-min  max-h-[95vh]  bg-white rounded-md  px-5 py-3 relative'>
+        <form className='create-post w-[450px] h-min  max-h-[95vh]  bg-white rounded-md  px-5 py-3 relative overflow-scroll'>
           <div className='flex justify-between items-center  pb-2 '>
             <h1 className=' text-[18px] font-[500] select-none'>
               {post ? 'Update Post' : 'Create post'}

@@ -1,4 +1,8 @@
-import {CONVERSATION_TYPES} from '../actions/conversationAction';
+import {CALL_TYPES} from '../actions/callAction';
+import {
+	CONVERSATION_TYPES,
+	seenConversation,
+} from '../actions/conversationAction';
 import {GLOBALTYPES, addToArray, removeFromArray} from '../actions/globalTypes';
 import {NOTIFY_TYPES} from '../actions/notifyAction';
 import {POST_TYPES, receiveComment} from '../actions/postAction';
@@ -26,7 +30,24 @@ export const socketMiddleware = (socket) => (params) => (next) => (action) => {
 				);
 
 				//join user
-				socket.emit('join_user', getState().auth.user._id);
+				socket.emit(
+					'join_user',
+					getState().auth.user._id,
+					getState().auth.user.followers.map((follower) => follower._id)
+				);
+			});
+
+			//check online
+			const user = getState().auth.user;
+			const following = user.following.map((item) => item._id);
+			socket.emit('check_online', following);
+			socket.on('check_online', (list) => {
+				dispatch({type: GLOBALTYPES.ONLINE, payload: list});
+			});
+
+			//receive offline
+			socket.on('offline', (user) => {
+				dispatch({type: GLOBALTYPES.OFFLINE, payload: user});
 			});
 
 			//receive comment
@@ -124,8 +145,7 @@ export const socketMiddleware = (socket) => (params) => (next) => (action) => {
 						type: CONVERSATION_TYPES.UPDATE_CONVERSATION_SORT,
 						payload: {
 							...conversation,
-							text: message.text,
-							media: message.media || [],
+							lastMessage: message,
 							seen: index ? [true, false] : [false, true],
 						},
 					});
@@ -133,15 +153,37 @@ export const socketMiddleware = (socket) => (params) => (next) => (action) => {
 					const newConversation = {
 						_id: message.conversation,
 						members: [message.sender, message.receiver],
-						text: message.text,
-						media: message.media,
-						seen: [false, true],
+						lastMessage: message,
+						seen: [true, false],
 					};
 					dispatch({
 						type: CONVERSATION_TYPES.ADD_CONVERSATION,
 						payload: newConversation,
 					});
 				}
+
+				//set seen = true
+
+				const {active} = getState().conversation;
+				if (active) {
+					dispatch(seenConversation(active._id, active.other._id));
+				}
+			});
+
+			//receive seen conversation
+			socket.on('seen_conversation', (conversationId) => {
+				const conversation = getState().conversation.conversations.find(
+					(item) => item._id === conversationId
+				);
+				dispatch({
+					type: CONVERSATION_TYPES.UPDATE_CONVERSATION,
+					payload: {...conversation, seen: [true, true]},
+				});
+			});
+
+			//receive call
+			socket.on('call', (msg) => {
+				dispatch({type: CALL_TYPES.CALL, payload: msg});
 			});
 
 			break;

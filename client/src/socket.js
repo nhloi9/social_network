@@ -6,4 +6,5 @@ const socket = io('http://localhost:4000', {
 		token: 123,
 	},
 });
+console.log(socket);
 export {socket};

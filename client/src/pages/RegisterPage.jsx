@@ -227,7 +227,7 @@ const RegisterPage = () => {
                 to={'/'}
                 className='ml-2 block cursor-pointer text-blue-700'
               >
-                Login now
+                Register
               </Link>
             </div>
           </form>

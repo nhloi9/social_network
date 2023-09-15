@@ -9,6 +9,7 @@ import {
   readNotify
 } from '../redux/actions/notifyAction'
 import { BsFillBellFill, BsFillBellSlashFill } from 'react-icons/bs'
+import { Link, useNavigate } from 'react-router-dom'
 
 const Notify = () => {
   const { data } = useSelector(state => state.notify)
@@ -77,14 +78,16 @@ const Notify = () => {
 
 const NotifyCard = ({ notify }) => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   return (
-    <div
+    <Link
       to={notify.url}
       className={` cursor-pointer flex w-full  px-1 py-2 hover:bg-gray-300 rounded-md justify-between ${
         notify.isRead ? 'opacity-[0.6]' : ''
       }`}
       onClick={() => {
         dispatch(readNotify(notify))
+        // navigate(notify.url)
       }}
     >
       <div className='flex  w-full'>
@@ -107,7 +110,7 @@ const NotifyCard = ({ notify }) => {
       <div className='w-[40px] flex items-center'>
         <Avatar url={notify.image} size={'medium-avatar'} />
       </div>
-    </div>
+    </Link>
   )
 }
 export default Notify

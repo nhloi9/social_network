@@ -44,6 +44,7 @@ export const createPost =
 					url: image.secure_url,
 					public_id: image.public_id,
 				})),
+				content,
 			});
 			dispatch({
 				type: POST_TYPES.CREATE,
@@ -70,6 +71,11 @@ export const createPost =
 				content,
 			};
 			dispatch(createNotify(msg));
+			socket.emit(
+				'join_post',
+				// res.data.posts.map((post) => post._id)
+				[res?.data.post._id]
+			);
 		} catch (err) {
 			dispatch({
 				type: GLOBALTYPES.ALERT,
@@ -181,7 +187,7 @@ export const likePost = (post) => async (dispatch, getState) => {
 	try {
 		socket.emit('like', {post: post._id, user: getState().auth.user});
 
-		await putDataAPI(`/post/${post._id}/like`);
+		const {data} = await putDataAPI(`/post/${post._id}/like`);
 		const newPost = {
 			...post,
 			likes: [
@@ -196,6 +202,18 @@ export const likePost = (post) => async (dispatch, getState) => {
 			type: POST_TYPES.UPDATE_POST,
 			payload: newPost,
 		});
+
+		const msg = {
+			receiver: [post.user],
+			target: data?.like?._id,
+			module: 'post_like',
+			url: `/post/${post._id}`,
+			text: 'like your post',
+			image: post.images[0]?.secure_url,
+			content: '',
+		};
+
+		dispatch(createNotify(msg));
 	} catch (err) {
 		console.log(err);
 	}

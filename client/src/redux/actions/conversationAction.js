@@ -1,5 +1,5 @@
 import {socket} from '../../socket';
-import {getDataApi, postDataAPI} from '../../utils/fetchData';
+import {getDataApi, postDataAPI, putDataAPI} from '../../utils/fetchData';
 import {GLOBALTYPES} from './globalTypes';
 
 export const CONVERSATION_TYPES = {
@@ -9,18 +9,45 @@ export const CONVERSATION_TYPES = {
 	ADD_CHAT: 'ADD_CHAT',
 	GET_CONVERSATIONS: 'GET_CONVERSATIONS',
 	UPDATE_CHAT: 'UPDATE_CHAT',
-	UPDATE_CONVERSATION_SORT: 'UPDATE_CONVERSATION',
+	UPDATE_CONVERSATION_SORT: 'UPDATE_CONVERSATION_SORT',
+	UPDATE_CONVERSATION: 'UPDATE_CONVERSATION',
+
 	ADD_CONVERSATION: 'ADD_CONVERSATION',
 	SORT_CONVERSATIONS: 'SORT_CONVERSATIONS',
 };
 
 export const createConversation = (other) => async (dispatch, getState) => {
 	try {
-		const res = await postDataAPI(`conversation`, {other});
-		const activeConversation = {
-			_id: res.data.conversation._id,
-			other,
-		};
+		const user = getState().auth.user;
+		let activeConversation;
+		let conversation = getState().conversation.conversations.find((item) =>
+			item.members.find((member) => member._id === other._id)
+		);
+		if (!conversation) {
+			const res = await postDataAPI(`conversation`, {other: other._id});
+			activeConversation = {
+				_id: res.data.conversation._id,
+				other,
+			};
+			dispatch({
+				type: CONVERSATION_TYPES.ADD_CONVERSATION,
+				payload: {
+					...res.data.conversation,
+					members: [
+						{
+							_id: user._id,
+							username: user.username,
+							fullname: user.fullname,
+							avatar: user.avatar,
+						},
+						other,
+					],
+				},
+			});
+		} else {
+			activeConversation = {_id: conversation._id, other};
+			dispatch(seenConversation(activeConversation._id, other._id));
+		}
 		dispatch({
 			type: CONVERSATION_TYPES.ACTIVE_CONVERSATION,
 			payload: activeConversation,
@@ -34,6 +61,27 @@ export const createConversation = (other) => async (dispatch, getState) => {
 };
 export const createMessage = (message) => async (dispatch, getState) => {
 	try {
+		const user = getState().auth.user;
+		const chat = getState().conversation.chats.find(
+			(item) => item._id === message.conversation
+		);
+		const messages = chat?.messages;
+		if (chat)
+			dispatch({
+				type: CONVERSATION_TYPES.UPDATE_CHAT,
+				payload: {
+					...chat,
+					messages: [
+						{
+							...message,
+							sender: message.sender._id,
+							receiver: message.receiver._id,
+							createdAt: new Date(),
+						},
+						...messages,
+					],
+				},
+			});
 		const res = await postDataAPI(`message`, {
 			...message,
 			sender: message.sender._id,
@@ -48,9 +96,6 @@ export const createMessage = (message) => async (dispatch, getState) => {
 		});
 
 		//update chat
-		const chat = getState().conversation.chats.find(
-			(item) => item._id === message.conversation
-		);
 		if (chat)
 			dispatch({
 				type: CONVERSATION_TYPES.UPDATE_CHAT,
@@ -61,35 +106,18 @@ export const createMessage = (message) => async (dispatch, getState) => {
 		const conversation = getState().conversation.conversations.find(
 			(item) => item._id === message.conversation
 		);
-		const user = getState().auth.user;
+		const index = conversation.members.findIndex(
+			(member) => member._id === user._id
+		);
 
-		if (conversation) {
-			const index = conversation.members.indexOf(
-				conversation.members.find((member) => member._id === user._id)
-			);
-
-			dispatch({
-				type: CONVERSATION_TYPES.UPDATE_CONVERSATION_SORT,
-				payload: {
-					...conversation,
-					text: message.text,
-					media: message.media || [],
-					seen: index ? [false, true] : [true, false],
-				},
-			});
-		} else {
-			const newConversation = {
-				_id: message.conversation,
-				members: [message.sender, message.receiver],
-				text: message.text,
-				media: message.media,
-				seen: [true, false],
-			};
-			dispatch({
-				type: CONVERSATION_TYPES.ADD_CONVERSATION,
-				payload: newConversation,
-			});
-		}
+		dispatch({
+			type: CONVERSATION_TYPES.UPDATE_CONVERSATION_SORT,
+			payload: {
+				...conversation,
+				lastMessage: message,
+				seen: index ? [false, true] : [true, false],
+			},
+		});
 	} catch (err) {
 		dispatch({
 			type: GLOBALTYPES.ALERT,
@@ -111,7 +139,11 @@ export const addChat = (conversationId) => async (dispatch, getState) => {
 
 		dispatch({
 			type: CONVERSATION_TYPES.ADD_CHAT,
-			payload: {_id: conversationId, messages: res.data.messages},
+			payload: {
+				_id: conversationId,
+				messages: res.data.messages,
+				cusorTime: res.data.cusorTime || null,
+			},
 		});
 	} catch (err) {
 		dispatch({
@@ -120,6 +152,31 @@ export const addChat = (conversationId) => async (dispatch, getState) => {
 		});
 	}
 };
+
+export const loadMoreMessages =
+	(conversationId) => async (dispatch, getState) => {
+		try {
+			const chat = getState().conversation.chats.find(
+				(item) => item._id === conversationId
+			);
+			if (chat?.cusorTime) {
+				const {data} = await getDataApi(
+					`message/conversation/${conversationId}?cusorTime=${chat.cusorTime}`
+				);
+
+				dispatch({
+					type: CONVERSATION_TYPES.UPDATE_CHAT,
+					payload: {
+						...chat,
+						messages: [...chat.messages, ...data.messages],
+						cusorTime: data.cusorTime ? data.cusorTime : null,
+					},
+				});
+			}
+		} catch (err) {
+			console.log(err);
+		}
+	};
 
 export const getConversations = () => async (dispatch, getState) => {
 	try {
@@ -138,3 +195,29 @@ export const getConversations = () => async (dispatch, getState) => {
 		});
 	}
 };
+
+export const seenConversation =
+	(conversationId, otherId) => async (dispatch, getState) => {
+		try {
+			const user = getState().auth.user;
+			const conversation = getState().conversation.conversations.find(
+				(item) => item._id === conversationId
+			);
+			const index = conversation.members.findIndex(
+				(member) => member._id === user._id
+			);
+			if (conversation.seen[index] === false) {
+				await putDataAPI(`conversation/${conversationId}/seen`);
+				socket.emit('seen_conversation', conversationId, otherId);
+				dispatch({
+					type: CONVERSATION_TYPES.UPDATE_CONVERSATION,
+					payload: {...conversation, seen: [true, true]},
+				});
+			}
+		} catch (err) {
+			dispatch({
+				type: GLOBALTYPES.ALERT,
+				error: err,
+			});
+		}
+	};

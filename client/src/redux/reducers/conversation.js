@@ -1,6 +1,6 @@
 import {createReducer} from '@reduxjs/toolkit';
 import {CONVERSATION_TYPES} from '../actions/conversationAction';
-import {addToArray, updateArray} from '../actions/globalTypes';
+import {updateArray} from '../actions/globalTypes';
 
 const initialState = {
 	conversations: [],
@@ -59,5 +59,8 @@ export const conversationReducer = createReducer(initialState, (builder) => {
 		})
 		.addCase(CONVERSATION_TYPES.ADD_CONVERSATION, (state, action) => {
 			state.conversations = [action.payload, ...state.conversations];
+		})
+		.addCase(CONVERSATION_TYPES.UPDATE_CONVERSATION, (state, action) => {
+			state.conversations = updateArray(state.conversations, action.payload);
 		});
 });
